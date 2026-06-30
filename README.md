@@ -86,6 +86,17 @@ The UI lives under `src/features/kyc-demo` and is split by responsibility:
 `src/app/page.tsx` only renders the demo console. The API routes under
 `src/app/api/demo` simulate the customer backend during local demos.
 
+## Customer Integration Guides
+
+Use these guides when implementing the same flow inside a customer codebase:
+
+- [KYC and Sumsub share token](docs/customer-guides/kyc.md)
+- [Pix BRL to USDC Base onramp](docs/customer-guides/onramp.md)
+- [USDC Base to BRL Pix offramp](docs/customer-guides/offramp.md)
+
+They are intentionally generic: no local machine paths, no real credentials,
+and no assumptions about the customer's frontend framework.
+
 ## Code Map
 
 Line numbers below point to the current repository shape and should be refreshed
