@@ -80,7 +80,9 @@ export function useKycFlow() {
   const [lastCheckedAt, setLastCheckedAt] = useState<string | null>(
     initialPersistedState?.lastCheckedAt ?? null,
   );
-  const [isPollingEnabled, setIsPollingEnabled] = useState(false);
+  const [isPollingEnabled, setIsPollingEnabled] = useState(() =>
+    Boolean(getPersistedStatusLookup(initialPersistedState)),
+  );
   const [sdkEvents, setSdkEvents] = useState<SdkEvent[]>([]);
   const [kycUserId, setKycUserId] = useState(
     initialPersistedState?.kycUserId ?? "",
@@ -89,6 +91,20 @@ export function useKycFlow() {
   const updateSetupField = useCallback(
     (field: keyof SetupForm) => (value: string) => {
       setSetupForm((current) => ({ ...current, [field]: value }));
+
+      if (field !== "email" && field !== "walletAddress") {
+        return;
+      }
+
+      setCustomerSessionToken(null);
+      setIsPollingEnabled(false);
+      setKycUserId("");
+      setLastCheckedAt(null);
+      setSdkEvents([]);
+      setSession(null);
+      setStatusError(null);
+      setStatusPhase("idle");
+      setVerificationStatus("not_started");
     },
     [],
   );

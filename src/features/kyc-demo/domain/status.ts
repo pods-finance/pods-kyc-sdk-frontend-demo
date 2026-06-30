@@ -268,11 +268,7 @@ export function formatTransferAmountIn(
   }
 
   if (kind === "offramp") {
-    if (!/^\d+$/.test(trimmed) || BigInt(trimmed) <= BigInt(0)) {
-      return null;
-    }
-
-    return trimmed;
+    return decimalToMinorUnits(trimmed, 6);
   }
 
   return decimalToMinorUnits(trimmed, 2);

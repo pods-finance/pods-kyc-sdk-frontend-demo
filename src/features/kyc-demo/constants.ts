@@ -7,14 +7,14 @@ export const initialSetupForm: SetupForm = {
   walletAddress: "",
 };
 
-export const initialTransferForm: TransferForm = {
-  amountBrl: "1000000",
+export const initialOfframpTransferForm: TransferForm = {
+  amount: "1",
   pixKey: "",
 };
 
 export const initialOnrampTransferForm: TransferForm = {
-  ...initialTransferForm,
-  amountBrl: "10",
+  amount: "10",
+  pixKey: "",
 };
 
 export const USDC_BASE_TOKEN_ADDRESS =

@@ -1,13 +1,9 @@
 "use client";
 
-import { Check, KeyRound, Loader2, Play, RefreshCw } from "lucide-react";
+import { KeyRound, Loader2, Play, RefreshCw } from "lucide-react";
 import type { FormEvent } from "react";
-import {
-  formatSumsubEnvironment,
-} from "../domain/session";
 import { getPhaseLabel } from "../lib/format";
 import type {
-  DemoRuntimeEnvironment,
   RequestPhase,
   SetupForm,
 } from "../types";
@@ -22,28 +18,18 @@ export function SdkSetupPanel({
   createError,
   createPhase,
   createSdkSession,
+  disabledReason,
   externalUserId,
   kycUserId,
-  loadExistingKyc,
-  lookupError,
-  lookupPhase,
-  runtimeEnvironment,
-  runtimeEnvironmentError,
-  setKycUserId,
   setupForm,
   updateSetupField,
 }: {
   createError: string | null;
   createPhase: RequestPhase;
   createSdkSession: (forceNewApplicant?: boolean) => Promise<void>;
+  disabledReason: string | null;
   externalUserId: string;
   kycUserId: string;
-  loadExistingKyc: () => Promise<void>;
-  lookupError: string | null;
-  lookupPhase: RequestPhase;
-  runtimeEnvironment: DemoRuntimeEnvironment | null;
-  runtimeEnvironmentError: string | null;
-  setKycUserId: (value: string) => void;
   setupForm: SetupForm;
   updateSetupField: (field: keyof SetupForm) => (value: string) => void;
 }) {
@@ -51,42 +37,21 @@ export function SdkSetupPanel({
     event.preventDefault();
     await createSdkSession(false);
   };
+  const isCreateDisabled = createPhase === "loading" || Boolean(disabledReason);
 
   return (
     <form className="panel flex flex-col gap-4" onSubmit={handleCreateSession}>
       <PanelHeader
         icon={<KeyRound className="h-4 w-4" />}
-        title="SDK link"
+        title="Start KYC"
         meta={getPhaseLabel(createPhase)}
       />
-      {externalUserId ? (
-        <CompactDatum label="External user" value={externalUserId} />
-      ) : null}
-      {kycUserId ? <CompactDatum label="KYC user" value={kycUserId} /> : null}
-      {runtimeEnvironment ? (
-        <div className="grid gap-2 text-xs text-slate-600 sm:grid-cols-2">
-          <CompactDatum
-            label="Sumsub env"
-            value={formatSumsubEnvironment(runtimeEnvironment.sumsubEnvironment)}
-          />
-          <CompactDatum
-            label="Sumsub token"
-            value={runtimeEnvironment.sumsubAppTokenPrefix}
-          />
-          <CompactDatum
-            label="Sumsub level"
-            value={runtimeEnvironment.sumsubLevelName}
-          />
-          <CompactDatum
-            label="Webhook secrets"
-            value={String(runtimeEnvironment.sumsubWebhookSecretCount)}
-          />
-        </div>
-      ) : null}
-      {runtimeEnvironmentError ? (
-        <p className="inline-alert danger">{runtimeEnvironmentError}</p>
-      ) : null}
-      <div className="grid gap-3">
+      <p className="text-sm text-[var(--fg-secondary)]">
+        Add the tester details once, generate the Sumsub verification link, and
+        keep the approved KYC profile saved in this browser after refresh.
+      </p>
+
+      <div className="grid gap-3 lg:grid-cols-2">
         <Field
           autoComplete="email"
           label="Email"
@@ -103,17 +68,21 @@ export function SdkSetupPanel({
           required
           value={setupForm.walletAddress}
         />
-        <Field
-          label="KYC user ID"
-          name="kycUserId"
-          onChange={setKycUserId}
-          value={kycUserId}
-        />
       </div>
+
+      <div className="grid gap-2 lg:grid-cols-2">
+        {externalUserId ? (
+          <CompactDatum label="External user" value={externalUserId} />
+        ) : null}
+        {kycUserId ? (
+          <CompactDatum label="Saved KYC profile" value={kycUserId} />
+        ) : null}
+      </div>
+
       <div className="grid gap-2 sm:grid-cols-2">
         <button
           className="primary-button"
-          disabled={createPhase === "loading"}
+          disabled={isCreateDisabled}
           type="submit"
         >
           {createPhase === "loading" ? (
@@ -125,7 +94,7 @@ export function SdkSetupPanel({
         </button>
         <button
           className="secondary-button"
-          disabled={createPhase === "loading"}
+          disabled={isCreateDisabled}
           onClick={() => void createSdkSession(true)}
           title="Create a fresh Sumsub applicant"
           type="button"
@@ -134,30 +103,14 @@ export function SdkSetupPanel({
           New applicant
         </button>
       </div>
-      <button
-        className="secondary-button"
-        disabled={lookupPhase === "loading"}
-        onClick={() => void loadExistingKyc()}
-        type="button"
-      >
-        {lookupPhase === "loading" ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <Check className="h-4 w-4" />
-        )}
-        Load existing KYC
-      </button>
+      {disabledReason ? (
+        <p className="inline-alert neutral">{disabledReason}</p>
+      ) : null}
       <OperationMessage
         error={createError}
         idle="No SDK link generated in this page load."
         phase={createPhase}
         success="SDK link generated and iframe ready."
-      />
-      <OperationMessage
-        error={lookupError}
-        idle=""
-        phase={lookupPhase}
-        success="Existing KYC loaded."
       />
     </form>
   );

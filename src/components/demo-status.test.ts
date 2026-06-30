@@ -119,14 +119,17 @@ describe("transfer amount formatting", () => {
     expect(formatTransferAmountIn("10,50", "onramp")).toBe("1050");
   });
 
-  it("keeps USDC raw amounts for offramp quotes", () => {
-    expect(formatTransferAmountIn("1000000", "offramp")).toBe("1000000");
+  it("converts USDC display amounts to raw units for offramp quotes", () => {
+    expect(formatTransferAmountIn("1", "offramp")).toBe("1000000");
+    expect(formatTransferAmountIn("1.5", "offramp")).toBe("1500000");
+    expect(formatTransferAmountIn("0.000001", "offramp")).toBe("1");
+    expect(formatTransferAmountIn("1,25", "offramp")).toBe("1250000");
   });
 
   it("rejects invalid transfer amounts", () => {
     expect(formatTransferAmountIn("", "onramp")).toBeNull();
     expect(formatTransferAmountIn("10.555", "onramp")).toBeNull();
-    expect(formatTransferAmountIn("1.5", "offramp")).toBeNull();
+    expect(formatTransferAmountIn("1.0000001", "offramp")).toBeNull();
   });
 });
 

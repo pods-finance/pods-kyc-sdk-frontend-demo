@@ -242,6 +242,9 @@ and fee breakdown.
 
 ### USDC Base -> BRL Pix
 
+The UI asks for a human USDC amount, such as `1` or `1.5`, then converts it to
+USDC raw units before calling the API.
+
 The offramp card first calls:
 
 ```text

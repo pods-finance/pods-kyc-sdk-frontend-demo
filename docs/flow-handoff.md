@@ -130,6 +130,9 @@ GET /v2/swap/quote
 
 Query parameters:
 
+The demo form accepts a human USDC amount, such as `1` or `1.5`, and converts it
+to raw units for `amountIn`.
+
 ```text
 originChain=base
 destinationChain=fiat

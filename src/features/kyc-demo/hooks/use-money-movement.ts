@@ -2,8 +2,8 @@
 
 import { useCallback, useState } from "react";
 import {
+  initialOfframpTransferForm,
   initialOnrampTransferForm,
-  initialTransferForm,
   transferEndpoints,
   transferLabels,
 } from "../constants";
@@ -68,7 +68,7 @@ function getInvalidAmountMessage(kind: TransferKind): string {
     return "Enter a valid BRL amount, for example 10 or 10.00.";
   }
 
-  return "Enter a valid USDC raw amount, for example 1000000.";
+  return "Enter a valid USDC amount, for example 1 or 1.5.";
 }
 
 export function useMoneyMovement({
@@ -81,7 +81,7 @@ export function useMoneyMovement({
   const [onrampForm, setOnrampForm] =
     useState<TransferForm>(initialOnrampTransferForm);
   const [offrampForm, setOfframpForm] =
-    useState<TransferForm>(initialTransferForm);
+    useState<TransferForm>(initialOfframpTransferForm);
   const [transferPhases, setTransferPhases] =
     useState<TransferState<RequestPhase>>(createPhaseState);
   const [transferActionPhases, setTransferActionPhases] =
@@ -107,7 +107,7 @@ export function useMoneyMovement({
       }
 
       const form = kind === "onramp" ? onrampForm : offrampForm;
-      const amountInput = trimOrNull(form.amountBrl);
+      const amountInput = trimOrNull(form.amount);
 
       if (!amountInput) {
         setTransferResults((current) => ({

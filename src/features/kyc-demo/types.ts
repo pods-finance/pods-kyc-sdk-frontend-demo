@@ -28,7 +28,7 @@ export type SdkEvent = {
 };
 
 export type TransferForm = {
-  amountBrl: string;
+  amount: string;
   pixKey: string;
 };
 

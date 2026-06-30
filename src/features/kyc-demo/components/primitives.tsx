@@ -18,14 +18,14 @@ export function PanelHeader({
   return (
     <div className="flex items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-2">
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-slate-300 bg-white text-slate-700">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-[var(--border-subtle)] bg-white text-[var(--fg-secondary)]">
           {icon}
         </span>
-        <h2 className="truncate text-sm font-semibold uppercase tracking-[0.12em] text-slate-700">
+        <h2 className="truncate text-sm font-semibold uppercase tracking-normal text-[var(--fg-primary)]">
           {title}
         </h2>
       </div>
-      <span className="rounded border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-500">
+      <span className="shrink-0 rounded border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-2 py-1 text-xs font-medium text-[var(--fg-secondary)]">
         {meta}
       </span>
     </div>
@@ -34,18 +34,26 @@ export function PanelHeader({
 
 export function Field({
   autoComplete = "off",
+  inputMode,
   label,
+  min,
   name,
   onChange,
+  placeholder,
   required = false,
+  step,
   type = "text",
   value,
 }: {
   autoComplete?: string;
+  inputMode?: "decimal" | "email" | "numeric" | "search" | "tel" | "text" | "url";
   label: string;
+  min?: string;
   name: string;
   onChange: (value: string) => void;
+  placeholder?: string;
   required?: boolean;
+  step?: string;
   type?: string;
   value: string;
 }) {
@@ -55,13 +63,24 @@ export function Field({
 
   return (
     <label className="grid gap-1.5 text-sm">
-      <span className="font-medium text-slate-700">{label}</span>
+      <span className="flex items-center gap-2 font-medium text-[var(--fg-primary)]">
+        {label}
+        {required ? (
+          <span className="rounded-full bg-[var(--caregiver-100)] px-2 py-0.5 text-[10px] font-semibold text-[var(--caregiver-700)]">
+            Required
+          </span>
+        ) : null}
+      </span>
       <input
         autoComplete={autoComplete}
         className="text-field"
+        inputMode={inputMode}
+        min={min}
         name={name}
         onChange={handleChange}
+        placeholder={placeholder}
         required={required}
+        step={step}
         type={type}
         value={value}
       />
@@ -114,10 +133,10 @@ export function EmptyState({
 }) {
   return (
     <div className="empty-state">
-      <span className="text-slate-400">{icon}</span>
+      <span className="text-[var(--fg-muted)]">{icon}</span>
       <div>
-        <p className="font-medium text-slate-700">{title}</p>
-        <p className="mt-1 text-sm text-slate-500">{detail}</p>
+        <p className="font-medium text-[var(--fg-primary)]">{title}</p>
+        <p className="mt-1 text-sm text-[var(--fg-secondary)]">{detail}</p>
       </div>
     </div>
   );
@@ -131,11 +150,13 @@ export function CompactDatum({
   value: string;
 }) {
   return (
-    <div className="rounded border border-slate-200 bg-slate-50 px-3 py-2">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+    <div className="min-w-0 overflow-hidden rounded border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3 py-2">
+      <p className="text-[11px] font-semibold uppercase tracking-normal text-[var(--fg-muted)]">
         {label}
       </p>
-      <p className="mt-1 truncate font-mono text-xs text-slate-700">{value}</p>
+      <p className="mt-1 break-all font-mono text-xs text-[var(--fg-primary)]">
+        {value}
+      </p>
     </div>
   );
 }
@@ -158,13 +179,13 @@ export function CopyableValue({
   };
 
   return (
-    <div className="rounded border border-slate-200 bg-white px-3 py-2">
+    <div className="min-w-0 overflow-hidden rounded border border-[var(--border-subtle)] bg-white px-3 py-2">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+        <p className="text-[11px] font-semibold uppercase tracking-normal text-[var(--fg-muted)]">
           {label}
         </p>
         <button
-          className="inline-flex h-7 w-7 items-center justify-center rounded border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--fg-secondary)] hover:bg-[var(--gray-100)]"
           onClick={() => void copy()}
           title={`Copy ${label}`}
           type="button"
@@ -180,7 +201,7 @@ export function CopyableValue({
         className={
           multiline
             ? "mt-2 max-h-28 overflow-auto break-all font-mono text-xs leading-relaxed text-slate-700"
-            : "mt-1 truncate font-mono text-xs text-slate-700"
+            : "mt-1 break-all font-mono text-xs text-slate-700"
         }
       >
         {value}

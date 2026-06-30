@@ -44,17 +44,23 @@ export function MoneyMovementPanel({
     Boolean(disabledReason) || phase === "loading" || phaseAction === "loading";
   const title = transferLabels[kind];
   const description = transferDescriptions[kind];
-  const amountLabel =
+  const isOfframp = kind === "offramp";
+  const amountLabel = kind === "onramp" ? "BRL amount" : "USDC amount";
+  const amountHint =
     kind === "onramp"
-      ? "BRL amount"
-      : "USDC raw amount (1000000 = 1 USDC)";
+      ? "Example: 10 means BRL 10.00."
+      : "Example: 1.5 means 1.5 USDC. The demo converts it to raw units for the API.";
+  const amountStep = kind === "onramp" ? "0.01" : "0.000001";
   const hasSuccessfulResult = result?.status === "success";
   const quoteId = extractQuoteId(result?.payload);
   const submitLabel =
     kind === "onramp" ? "Generate Pix quote" : "Generate deposit address";
+  const formGridClass = isOfframp
+    ? "grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_260px] lg:items-end"
+    : "grid gap-3 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-end";
 
   const handleAmountChange = (value: string) => {
-    onChange({ ...form, amountBrl: value });
+    onChange({ ...form, amount: value });
   };
   const handlePixKeyChange = (value: string) => {
     onChange({ ...form, pixKey: value });
@@ -67,39 +73,52 @@ export function MoneyMovementPanel({
         title={title}
         meta={getPhaseLabel(phase)}
       />
-      <p className="text-sm text-slate-600">{description}</p>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-        <Field
-          label={amountLabel}
-          name={`${kind}-amount`}
-          onChange={handleAmountChange}
-          required
-          type="number"
-          value={form.amountBrl}
-        />
-        {kind === "offramp" ? (
+      <p className="text-sm text-[var(--fg-secondary)]">{description}</p>
+      <div className={formGridClass}>
+        <div className="min-w-0">
           <Field
-            label="Pix key"
-            name={`${kind}-pix-key`}
-            onChange={handlePixKeyChange}
+            inputMode="decimal"
+            label={amountLabel}
+            min="0"
+            name={`${kind}-amount`}
+            onChange={handleAmountChange}
             required
-            value={form.pixKey}
+            step={amountStep}
+            type="number"
+            value={form.amount}
           />
+          <p className="mt-1 text-xs leading-5 text-[var(--fg-secondary)]">
+            {amountHint}
+          </p>
+        </div>
+        {isOfframp ? (
+          <div className="min-w-0">
+            <Field
+              label="Pix key"
+              name={`${kind}-pix-key`}
+              onChange={handlePixKeyChange}
+              required
+              value={form.pixKey}
+            />
+            <p className="mt-1 text-xs leading-5 text-[var(--fg-secondary)]">
+              Required for the BRL Pix payout.
+            </p>
+          </div>
         ) : null}
+        <button
+          className="primary-button w-full"
+          disabled={isDisabled}
+          onClick={() => onSubmit(kind)}
+          type="button"
+        >
+          {phase === "loading" ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <SendHorizontal className="h-4 w-4" />
+          )}
+          {submitLabel}
+        </button>
       </div>
-      <button
-        className="secondary-button"
-        disabled={isDisabled}
-        onClick={() => onSubmit(kind)}
-        type="button"
-      >
-        {phase === "loading" ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <SendHorizontal className="h-4 w-4" />
-        )}
-        {submitLabel}
-      </button>
       {disabledReason ? (
         <p className="inline-alert neutral">{disabledReason}</p>
       ) : null}
