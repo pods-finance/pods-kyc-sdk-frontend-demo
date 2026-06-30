@@ -22,7 +22,7 @@ https://deframe-picn-papais-brl-brpga0.herokuapp.com
 ## Local Setup
 
 ```bash
-cd pods-kyc-demo
+cd pods-kyc-sdk-frontend-demo
 cp .env.example .env.local
 npm install
 npm run dev -- -p 3000
@@ -281,8 +281,8 @@ builders, bytecode payloads, proxy allowlisting, and response parsing.
 
 ## Git Safety
 
-This project is prepared to become a standalone repository named
-`pods-kyc-demo`. Keep these files out of commits:
+This project is prepared as the standalone
+`pods-kyc-sdk-frontend-demo` repository. Keep these files out of commits:
 
 - `.env.local`
 - `.env.*` backups
