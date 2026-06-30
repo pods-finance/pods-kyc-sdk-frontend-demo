@@ -86,6 +86,79 @@ The UI lives under `src/features/kyc-demo` and is split by responsibility:
 `src/app/page.tsx` only renders the demo console. The API routes under
 `src/app/api/demo` simulate the customer backend during local demos.
 
+## Code Map
+
+Line numbers below point to the current repository shape and should be refreshed
+if the files move.
+
+### KYC and Sumsub Share Token
+
+- UI composition starts in `src/features/kyc-demo/components/pods-kyc-demo-console.tsx:23`.
+- The SDK setup, WebSDK frame, and status panels are wired in
+  `src/features/kyc-demo/components/pods-kyc-demo-console.tsx:69`.
+- KYC state, SDK session creation, status polling, and local restore live in
+  `src/features/kyc-demo/hooks/use-kyc-flow.ts:58`.
+- The SDK session request body is built in
+  `src/features/kyc-demo/domain/kyc-flow.ts:71`.
+- The demo backend validates `email` and `walletAddress`, creates the Sumsub SDK
+  token, and stores local metadata in `src/app/api/demo/kyc-session/route.ts:80`.
+- KYC status polling runs through `src/features/kyc-demo/hooks/use-kyc-flow.ts:248`.
+- Sumsub `GREEN` is checked in `src/lib/customer-simulator/webhook.ts:91`.
+  The condition is `type=applicantReviewed`, `reviewStatus=completed`, and
+  `reviewResult.reviewAnswer=GREEN`.
+- Approved/rejected provider statuses are normalized in
+  `src/features/kyc-demo/domain/status.ts:140`.
+- Money movement is unlocked only when the normalized status is `approved` in
+  `src/features/kyc-demo/domain/status.ts:166`.
+- The Sumsub webhook handler generates the share token and submits it to Pods in
+  `src/app/api/customer-webhooks/sumsub/route.ts:143`.
+
+### Pix BRL -> USDC Base Onramp
+
+- The onramp card is mounted in
+  `src/features/kyc-demo/components/pods-kyc-demo-console.tsx:113`.
+- The shared money movement card UI lives in
+  `src/features/kyc-demo/components/money-movement-panel.tsx:22`.
+- Onramp validation and quote submission start in
+  `src/features/kyc-demo/hooks/use-money-movement.ts:103`.
+- Onramp query params are built in
+  `src/features/kyc-demo/domain/transfers.ts:27`.
+- The Swap v2 quote request is sent from
+  `src/features/kyc-demo/hooks/use-money-movement.ts:153`.
+- Pix copy-paste, QR code, quote ID, output amount, expiration, and fee
+  breakdown are rendered in
+  `src/features/kyc-demo/components/transfer-result-details.tsx:27`.
+
+### USDC Base -> BRL Pix Offramp
+
+- The offramp card is mounted in
+  `src/features/kyc-demo/components/pods-kyc-demo-console.tsx:124`.
+- The Pix key field is rendered in
+  `src/features/kyc-demo/components/money-movement-panel.tsx:80`.
+- Offramp validation, quote submission, and deposit-address generation start in
+  `src/features/kyc-demo/hooks/use-money-movement.ts:103`.
+- The required Pix key check for offramp is in
+  `src/features/kyc-demo/hooks/use-money-movement.ts:136`.
+- Offramp quote params are built in
+  `src/features/kyc-demo/domain/transfers.ts:43`.
+- After the quote, the demo calls `POST /v2/swap/bytecode` in
+  `src/features/kyc-demo/hooks/use-money-movement.ts:169`.
+- The bytecode/deposit-address request body is built in
+  `src/features/kyc-demo/domain/transfers.ts:53` and routed through
+  `src/features/kyc-demo/domain/transfers.ts:70`.
+- The USDC deposit address and transaction payload are rendered in
+  `src/features/kyc-demo/components/transfer-result-details.tsx:107`.
+
+### Pods API Proxy
+
+- Browser-side API calls decide whether to go through the server proxy in
+  `src/features/kyc-demo/lib/api.ts:8`.
+- The browser sends proxied Pods calls to `/api/demo/pods` in
+  `src/features/kyc-demo/lib/api.ts:30`.
+- The Next.js proxy allowlist is in `src/app/api/demo/pods/route.ts:34`.
+- The proxy attaches `PODS_KYC_API_KEY` server-side and forwards the request in
+  `src/app/api/demo/pods/route.ts:52`.
+
 ## Server-Side Proxy
 
 The browser never receives `PODS_KYC_API_KEY`.
