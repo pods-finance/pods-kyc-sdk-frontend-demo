@@ -67,6 +67,32 @@ export function buildOfframpBytecodeBody({
   };
 }
 
+export function buildTransferBytecodeBody({
+  kind,
+  pixKey,
+  quoteId,
+  walletAddress,
+}: {
+  kind: TransferKind;
+  pixKey?: string;
+  quoteId: string;
+  walletAddress: string;
+}): Record<string, string> {
+  if (kind === "offramp") {
+    return buildOfframpBytecodeBody({
+      pixKey: pixKey ?? "",
+      quoteId,
+      walletAddress,
+    });
+  }
+
+  return {
+    destinationAddress: walletAddress,
+    originAddress: walletAddress,
+    quoteId,
+  };
+}
+
 export function extractQuoteId(value: unknown): string | null {
   return firstStringAtPath(value, [
     ["quoteId"],

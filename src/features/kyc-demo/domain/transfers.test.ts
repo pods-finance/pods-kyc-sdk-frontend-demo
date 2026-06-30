@@ -3,6 +3,7 @@ import { USDC_BASE_TOKEN_ADDRESS } from "../constants";
 import {
   buildOfframpBytecodeBody,
   buildQuery,
+  buildTransferBytecodeBody,
   buildTransferQuoteParams,
   extractFeeCharges,
   extractQuoteId,
@@ -55,6 +56,38 @@ describe("buildOfframpBytecodeBody", () => {
   it("builds the Pix payout transaction body expected by Swap v2", () => {
     expect(
       buildOfframpBytecodeBody({
+        pixKey: "47567512882",
+        quoteId: "quote-1",
+        walletAddress,
+      }),
+    ).toEqual({
+      destinationAddress: "47567512882",
+      originAddress: walletAddress,
+      pixKey: "47567512882",
+      quoteId: "quote-1",
+    });
+  });
+});
+
+describe("buildTransferBytecodeBody", () => {
+  it("builds the onramp transaction body from the user wallet", () => {
+    expect(
+      buildTransferBytecodeBody({
+        kind: "onramp",
+        quoteId: "quote-1",
+        walletAddress,
+      }),
+    ).toEqual({
+      destinationAddress: walletAddress,
+      originAddress: walletAddress,
+      quoteId: "quote-1",
+    });
+  });
+
+  it("builds the offramp transaction body with the Pix key", () => {
+    expect(
+      buildTransferBytecodeBody({
+        kind: "offramp",
         pixKey: "47567512882",
         quoteId: "quote-1",
         walletAddress,

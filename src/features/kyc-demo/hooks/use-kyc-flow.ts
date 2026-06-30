@@ -1,13 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { initialSetupForm, pollIntervalMs } from "../constants";
+import { pollIntervalMs } from "../constants";
+import {
+  buildKycSessionRequestBody,
+  createSessionExternalUserId,
+  getInitialSetupForm,
+  hasRecoverableCustomerSession,
+  readExternalUserId,
+  readKycUserId,
+} from "../domain/kyc-flow";
 import {
   extractAccessToken,
   extractApplicantId,
-  extractDemoRuntimeEnvironment,
   extractSessionId,
-  formatSumsubEnvironment,
 } from "../domain/session";
 import {
   DEMO_ENDPOINTS,
@@ -19,6 +25,7 @@ import {
   getStatusTone,
   normalizeVerificationStatus,
 } from "../domain/status";
+import { useRuntimeEnvironment } from "./use-runtime-environment";
 import { apiRequest } from "../lib/api";
 import {
   formatTimestamp,
@@ -31,9 +38,8 @@ import {
   readPersistedDemoState,
   writePersistedDemoState,
 } from "../lib/persisted-state";
-import { buildBody, firstStringAtPath, trimOrNull } from "../lib/records";
+import { firstStringAtPath, trimOrNull } from "../lib/records";
 import type {
-  DemoRuntimeEnvironment,
   KycSession,
   PersistedDemoState,
   RequestPhase,
@@ -41,60 +47,12 @@ import type {
   SetupForm,
 } from "../types";
 
-function readKycUserId(payload: unknown): string | null {
-  return firstStringAtPath(payload, [
-    ["data", "kycUserId"],
-    ["kycUserId"],
-  ]);
-}
-
-function readExternalUserId(
-  payload: unknown,
-  fallback: string,
-): string {
-  return (
-    firstStringAtPath(payload, [
-      ["data", "externalUserId"],
-      ["externalUserId"],
-    ]) ?? fallback
-  );
-}
-
 function readInitialPersistedState(): PersistedDemoState | null {
   if (typeof window === "undefined") {
     return null;
   }
 
   return readPersistedDemoState();
-}
-
-function getInitialSetupForm(
-  persisted: PersistedDemoState | null,
-): SetupForm {
-  return {
-    ...initialSetupForm,
-    email: persisted?.email ?? initialSetupForm.email,
-    externalUserId:
-      persisted?.externalUserId ?? initialSetupForm.externalUserId,
-    walletAddress: persisted?.walletAddress ?? initialSetupForm.walletAddress,
-  };
-}
-
-function hasCustomerSessionFromState(
-  persisted: PersistedDemoState | null,
-): boolean {
-  if (!persisted) {
-    return false;
-  }
-
-  if (persisted.kycUserId) {
-    return true;
-  }
-
-  return Boolean(
-    persisted.verificationStatus &&
-      persisted.verificationStatus !== "not_started",
-  );
 }
 
 export function useKycFlow() {
@@ -105,7 +63,9 @@ export function useKycFlow() {
   const [session, setSession] = useState<KycSession | null>(null);
   const [customerSessionToken, setCustomerSessionToken] = useState<
     string | null
-  >(() => (hasCustomerSessionFromState(initialPersistedState) ? "demo" : null));
+  >(() =>
+    hasRecoverableCustomerSession(initialPersistedState) ? "demo" : null,
+  );
   const [verificationStatus, setVerificationStatus] =
     useState<VerificationStatus>(
       initialPersistedState?.verificationStatus ?? "not_started",
@@ -117,10 +77,6 @@ export function useKycFlow() {
   const [statusPhase, setStatusPhase] = useState<RequestPhase>("idle");
   const [statusError, setStatusError] = useState<string | null>(null);
   const [sdkError, setSdkError] = useState<string | null>(null);
-  const [runtimeEnvironment, setRuntimeEnvironment] =
-    useState<DemoRuntimeEnvironment | null>(null);
-  const [runtimeEnvironmentError, setRuntimeEnvironmentError] =
-    useState<string | null>(null);
   const [lastCheckedAt, setLastCheckedAt] = useState<string | null>(
     initialPersistedState?.lastCheckedAt ?? null,
   );
@@ -141,13 +97,15 @@ export function useKycFlow() {
   const walletAddress = setupForm.walletAddress.trim();
   const hasCustomerSession = Boolean(customerSessionToken);
   const canPollStatus = kycUserId.length > 0 || externalUserId.length > 0;
+  const {
+    runtimeEnvironment,
+    runtimeEnvironmentError,
+    runtimeEnvironmentLabel,
+  } = useRuntimeEnvironment();
   const statusTone = getStatusTone(verificationStatus);
   const statusLabel = getStatusLabel(verificationStatus);
   const statusDetail = getStatusDetail(verificationStatus);
   const statusEndpoint = getDemoStatusEndpoint({ externalUserId, kycUserId });
-  const runtimeEnvironmentLabel = runtimeEnvironment
-    ? `Sumsub ${formatSumsubEnvironment(runtimeEnvironment.sumsubEnvironment)}`
-    : "Sumsub env";
 
   useEffect(() => {
     let isMounted = true;
@@ -211,38 +169,6 @@ export function useKycFlow() {
     verificationStatus,
   ]);
 
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadRuntimeEnvironment() {
-      try {
-        const payload = await apiRequest(DEMO_ENDPOINTS.demoEnvironment, {
-          method: "GET",
-        });
-        const nextRuntimeEnvironment = extractDemoRuntimeEnvironment(payload);
-
-        if (!nextRuntimeEnvironment) {
-          throw new Error("Demo environment response is invalid.");
-        }
-
-        if (isMounted) {
-          setRuntimeEnvironment(nextRuntimeEnvironment);
-          setRuntimeEnvironmentError(null);
-        }
-      } catch (error) {
-        if (isMounted) {
-          setRuntimeEnvironmentError(getErrorMessage(error));
-        }
-      }
-    }
-
-    void loadRuntimeEnvironment();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
   const pushSdkEvent = useCallback((label: string, payload?: unknown) => {
     const nextStatus = normalizeVerificationStatus(payload);
 
@@ -267,15 +193,17 @@ export function useKycFlow() {
   const requestKycSession = useCallback(
     async (forceNewApplicant = false) => {
       const nextExternalUserId =
-        forceNewApplicant || !externalUserId
-          ? `demo-user-${Date.now()}`
-          : externalUserId;
-      const sessionPayload: Record<string, unknown> = buildBody({
+        createSessionExternalUserId({
+          externalUserId,
+          forceNewApplicant,
+          nowMs: Date.now(),
+        });
+      const sessionPayload = buildKycSessionRequestBody({
         email: setupForm.email,
         externalUserId: nextExternalUserId,
+        ttlInSecs: 600,
         walletAddress: setupForm.walletAddress,
       });
-      sessionPayload.ttlInSecs = 600;
 
       const payload = await apiRequest(DEMO_ENDPOINTS.demoKycSession, {
         body: sessionPayload,

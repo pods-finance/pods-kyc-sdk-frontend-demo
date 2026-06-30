@@ -16,8 +16,8 @@ import {
   getSwapStatusEndpoint,
 } from "../domain/status";
 import {
-  buildOfframpBytecodeBody,
   buildQuery,
+  buildTransferBytecodeBody,
   buildTransferQuoteParams,
   extractQuoteId,
 } from "../domain/transfers";
@@ -174,8 +174,9 @@ export function useMoneyMovement({
           }
 
           resultPayload = await apiRequest(DEMO_ENDPOINTS.swapBytecode, {
-            body: buildOfframpBytecodeBody({
-              pixKey: pixKey ?? "",
+            body: buildTransferBytecodeBody({
+              kind,
+              pixKey: pixKey ?? undefined,
               quoteId,
               walletAddress,
             }),
@@ -239,43 +240,32 @@ export function useMoneyMovement({
             method: "GET",
           });
         } else {
-          let body: Record<string, unknown>;
+          const pixKey = trimOrNull(offrampForm.pixKey);
 
-          if (kind === "offramp") {
-            const pixKey = trimOrNull(offrampForm.pixKey);
-
-            if (!pixKey) {
-              setTransferActionPhases((current) => ({
-                ...current,
-                [kind]: "idle",
-              }));
-              setTransferResults((current) => ({
-                ...current,
-                [kind]: {
-                  status: "error",
-                  message:
-                    "Pix key is required to build the Pix withdrawal transaction.",
-                  payload: currentResult?.payload,
-                },
-              }));
-              return;
-            }
-
-            body = buildOfframpBytecodeBody({
-              pixKey,
-              quoteId,
-              walletAddress,
-            });
-          } else {
-            body = {
-              destinationAddress: walletAddress,
-              originAddress: walletAddress,
-              quoteId,
-            };
+          if (kind === "offramp" && !pixKey) {
+            setTransferActionPhases((current) => ({
+              ...current,
+              [kind]: "idle",
+            }));
+            setTransferResults((current) => ({
+              ...current,
+              [kind]: {
+                status: "error",
+                message:
+                  "Pix key is required to build the Pix withdrawal transaction.",
+                payload: currentResult?.payload,
+              },
+            }));
+            return;
           }
 
           payload = await apiRequest(DEMO_ENDPOINTS.swapBytecode, {
-            body,
+            body: buildTransferBytecodeBody({
+              kind,
+              pixKey: pixKey ?? undefined,
+              quoteId,
+              walletAddress,
+            }),
           });
         }
 
