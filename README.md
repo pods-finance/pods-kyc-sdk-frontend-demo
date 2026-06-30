@@ -90,6 +90,7 @@ The UI lives under `src/features/kyc-demo` and is split by responsibility:
 
 Use these guides when implementing the same flow inside a customer codebase:
 
+- [Temporary shared Sumsub demo](docs/customer-guides/temporary-shared-sumsub-demo.md)
 - [KYC and Sumsub share token](docs/customer-guides/kyc.md)
 - [Pix BRL to USDC Base onramp](docs/customer-guides/onramp.md)
 - [USDC Base to BRL Pix offramp](docs/customer-guides/offramp.md)

@@ -9,6 +9,7 @@ own the credentials, secrets, polling/webhook logic, and calls to Pods.
 
 ## Guides
 
+- [Temporary shared Sumsub demo](temporary-shared-sumsub-demo.md)
 - [KYC and Sumsub share token](kyc.md)
 - [Pix BRL to USDC Base onramp](onramp.md)
 - [USDC Base to BRL Pix offramp](offramp.md)
