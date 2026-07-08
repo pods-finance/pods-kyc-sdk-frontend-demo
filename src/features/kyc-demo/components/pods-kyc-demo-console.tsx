@@ -8,8 +8,10 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { getSumsubEnvironmentTone } from "../domain/session";
+import { useBigDataKycFlow } from "../hooks/use-bigid-kyc-flow";
 import { useKycFlow } from "../hooks/use-kyc-flow";
 import { useMoneyMovement } from "../hooks/use-money-movement";
+import { BigDataKycPanel } from "./bigid-kyc-panel";
 import { CustomerProfilePanel } from "./customer-profile-panel";
 import { LocalStatusPanel } from "./local-status-panel";
 import { MoneyMovementPanel } from "./money-movement-panel";
@@ -27,7 +29,7 @@ const tabs: Array<{
   label: string;
 }> = [
   {
-    description: "Verify a user with Sumsub and save the Pods KYC user ID.",
+    description: "Verify a user with BigDataCorp or Sumsub and save the KYC ID.",
     id: "kyc",
     label: "KYC Flow",
   },
@@ -58,6 +60,10 @@ export function PodsKycDemoConsole() {
     return window.location.origin;
   });
   const kyc = useKycFlow();
+  const bigDataKyc = useBigDataKycFlow({
+    email: kyc.setupForm.email,
+    walletAddress: kyc.setupForm.walletAddress,
+  });
   const moneyMovement = useMoneyMovement({
     verificationStatus: kyc.verificationStatus,
     walletAddress: kyc.walletAddress,
@@ -137,29 +143,38 @@ export function PodsKycDemoConsole() {
             <div>
               {activeTab === "kyc" ? (
                 <div className="grid gap-4">
-                  <SdkSetupPanel
-                    createError={kyc.createError}
-                    createPhase={kyc.createPhase}
-                    createSdkSession={createSdkSession}
-                    disabledReason={missingProfileReason}
-                    externalUserId={kyc.externalUserId}
-                    kycUserId={kyc.kycUserId}
-                    setupForm={kyc.setupForm}
-                    updateSetupField={kyc.updateSetupField}
-                  />
+                  <BigDataKycPanel flow={bigDataKyc} />
 
-                  {kyc.session ? (
-                    <WebSdkPanel
-                      externalUserId={kyc.externalUserId}
-                      handleSdkError={kyc.handleSdkError}
-                      handleSdkMessage={kyc.handleSdkMessage}
-                      handleTokenRefresh={kyc.handleTokenRefresh}
-                      kycUserId={kyc.kycUserId}
-                      sdkError={kyc.sdkError}
-                      session={kyc.session}
-                      setupForm={kyc.setupForm}
-                    />
-                  ) : null}
+                  <details className="panel flex flex-col gap-4">
+                    <summary className="cursor-pointer text-sm font-semibold uppercase tracking-normal text-[var(--fg-primary)]">
+                      Sumsub reusable KYC flow
+                    </summary>
+                    <div className="mt-4 grid gap-4">
+                      <SdkSetupPanel
+                        createError={kyc.createError}
+                        createPhase={kyc.createPhase}
+                        createSdkSession={createSdkSession}
+                        disabledReason={missingProfileReason}
+                        externalUserId={kyc.externalUserId}
+                        kycUserId={kyc.kycUserId}
+                        setupForm={kyc.setupForm}
+                        updateSetupField={kyc.updateSetupField}
+                      />
+
+                      {kyc.session ? (
+                        <WebSdkPanel
+                          externalUserId={kyc.externalUserId}
+                          handleSdkError={kyc.handleSdkError}
+                          handleSdkMessage={kyc.handleSdkMessage}
+                          handleTokenRefresh={kyc.handleTokenRefresh}
+                          kycUserId={kyc.kycUserId}
+                          sdkError={kyc.sdkError}
+                          session={kyc.session}
+                          setupForm={kyc.setupForm}
+                        />
+                      ) : null}
+                    </div>
+                  </details>
                 </div>
               ) : null}
 

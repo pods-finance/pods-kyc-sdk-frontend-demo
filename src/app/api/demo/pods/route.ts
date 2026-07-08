@@ -9,6 +9,13 @@ type ProxyRequestBody = {
 };
 
 const swapStatusPattern = /^\/v2\/swap\/status\/[^/]+$/;
+const allowedRoutes = new Set([
+  "GET /api/v1/kyc/status",
+  "POST /api/v1/kyc/bigdatacorp/sessions",
+  "POST /api/v1/kyc/bigdatacorp/submit",
+  "GET /v2/swap/quote",
+  "POST /v2/swap/bytecode",
+]);
 
 function readProxyMethod(value: unknown): "GET" | "POST" {
   const method = typeof value === "string" ? value.toUpperCase() : "POST";
@@ -32,11 +39,7 @@ function readProxyPath(value: unknown): URL {
 }
 
 function isAllowedRoute(method: string, path: string): boolean {
-  if (method === "GET" && path === "/v2/swap/quote") {
-    return true;
-  }
-
-  if (method === "POST" && path === "/v2/swap/bytecode") {
+  if (allowedRoutes.has(`${method} ${path}`)) {
     return true;
   }
 

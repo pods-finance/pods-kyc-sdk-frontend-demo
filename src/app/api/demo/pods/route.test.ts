@@ -150,6 +150,122 @@ describe("POST /api/demo/pods", () => {
     );
   });
 
+  it("proxies the BigDataCorp session route", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          iframeUrl: "https://iframe.example/session",
+          kycUserId: "8d07aa27-b7ea-4cf2-8cdb-c379ee5063aa",
+        }),
+        {
+          headers: { "content-type": "application/json" },
+          status: 200,
+        },
+      ),
+    );
+
+    const response = await POST(
+      jsonRequest({
+        body: {
+          cpf: "47567512882",
+          email: "bruno@pods.finance",
+          walletAddress: "0x0000000000000000000000000000000000000001",
+        },
+        method: "POST",
+        path: "/api/v1/kyc/bigdatacorp/sessions",
+      }),
+    );
+
+    await expect(response.json()).resolves.toEqual({
+      iframeUrl: "https://iframe.example/session",
+      kycUserId: "8d07aa27-b7ea-4cf2-8cdb-c379ee5063aa",
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://pods-api.example/api/v1/kyc/bigdatacorp/sessions",
+      expect.objectContaining({
+        body: JSON.stringify({
+          cpf: "47567512882",
+          email: "bruno@pods.finance",
+          walletAddress: "0x0000000000000000000000000000000000000001",
+        }),
+        headers: expect.objectContaining({
+          Authorization: "Bearer pods-demo-key",
+          "x-api-key": "pods-demo-key",
+        }),
+        method: "POST",
+      }),
+    );
+  });
+
+  it("proxies BigDataCorp KYC status lookups", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ status: "created" }), {
+        headers: { "content-type": "application/json" },
+        status: 200,
+      }),
+    );
+
+    const response = await POST(
+      jsonRequest({
+        method: "GET",
+        path: "/api/v1/kyc/status?kycUserId=8d07aa27-b7ea-4cf2-8cdb-c379ee5063aa",
+      }),
+    );
+
+    await expect(response.json()).resolves.toEqual({ status: "created" });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://pods-api.example/api/v1/kyc/status?kycUserId=8d07aa27-b7ea-4cf2-8cdb-c379ee5063aa",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: "Bearer pods-demo-key",
+          "x-api-key": "pods-demo-key",
+        }),
+        method: "GET",
+      }),
+    );
+  });
+
+  it("proxies the BigDataCorp submit route", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ status: "provider_pending" }), {
+        headers: { "content-type": "application/json" },
+        status: 200,
+      }),
+    );
+
+    const response = await POST(
+      jsonRequest({
+        body: {
+          address: {
+            city: "Campinas",
+            country: "BRA",
+            number: "42",
+            state: "SP",
+            streetAddress: "Rua Teste",
+            zipCode: "13000000",
+          },
+          kycUserId: "8d07aa27-b7ea-4cf2-8cdb-c379ee5063aa",
+        },
+        method: "POST",
+        path: "/api/v1/kyc/bigdatacorp/submit",
+      }),
+    );
+
+    await expect(response.json()).resolves.toEqual({
+      status: "provider_pending",
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://pods-api.example/api/v1/kyc/bigdatacorp/submit",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: "Bearer pods-demo-key",
+          "x-api-key": "pods-demo-key",
+        }),
+        method: "POST",
+      }),
+    );
+  });
+
   it("rejects unsupported Swap v2 routes", async () => {
     const response = await POST(
       jsonRequest({

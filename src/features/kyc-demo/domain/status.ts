@@ -15,6 +15,8 @@ export const DEMO_ENDPOINTS = {
   demoKycSession: "/api/demo/kyc-session",
   demoPodsProxy: "/api/demo/pods",
   demoStatus: "/api/demo/kyc-status",
+  bigDataCorpSessions: "/api/v1/kyc/bigdatacorp/sessions",
+  bigDataCorpSubmit: "/api/v1/kyc/bigdatacorp/submit",
   kycSessions: "/api/v1/kyc/sessions",
   status: "/api/v1/kyc/status",
   swapQuote: "/v2/swap/quote",

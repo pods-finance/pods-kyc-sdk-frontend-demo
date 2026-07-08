@@ -200,7 +200,7 @@ export function CopyableValue({
       <p
         className={
           multiline
-            ? "mt-2 max-h-28 overflow-auto break-all font-mono text-xs leading-relaxed text-slate-700"
+            ? "mt-2 max-h-28 overflow-auto whitespace-pre-wrap break-all font-mono text-xs leading-relaxed text-slate-700"
             : "mt-1 break-all font-mono text-xs text-slate-700"
         }
       >
