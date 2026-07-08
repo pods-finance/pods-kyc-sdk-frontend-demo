@@ -167,8 +167,8 @@ describe("POST /api/demo/pods", () => {
     const response = await POST(
       jsonRequest({
         body: {
-          cpf: "47567512882",
-          email: "bruno@pods.finance",
+          cpf: "CPF_FROM_USER",
+          email: "user@example.com",
           walletAddress: "0x0000000000000000000000000000000000000001",
         },
         method: "POST",
@@ -184,8 +184,8 @@ describe("POST /api/demo/pods", () => {
       "https://pods-api.example/api/v1/kyc/bigdatacorp/sessions",
       expect.objectContaining({
         body: JSON.stringify({
-          cpf: "47567512882",
-          email: "bruno@pods.finance",
+          cpf: "CPF_FROM_USER",
+          email: "user@example.com",
           walletAddress: "0x0000000000000000000000000000000000000001",
         }),
         headers: expect.objectContaining({

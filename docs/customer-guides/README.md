@@ -10,7 +10,7 @@ own the credentials, secrets, polling/webhook logic, and calls to Pods.
 ## Guides
 
 - [Temporary shared Sumsub demo](temporary-shared-sumsub-demo.md)
-- [KYC and Sumsub share token](kyc.md)
+- [KYC providers: Sumsub share token and BigDataCorp iframe](kyc.md)
 - [Pix BRL to USDC Base onramp](onramp.md)
 - [USDC Base to BRL Pix offramp](offramp.md)
 
@@ -19,6 +19,9 @@ own the credentials, secrets, polling/webhook logic, and calls to Pods.
 - Keep `PODS_API_KEY`, Sumsub app tokens, Sumsub secret keys, webhook secrets,
   and private keys on your backend.
 - Never send Pods or Sumsub secrets to the browser.
+- Do not call BigDataCorp directly from the browser. If you use the BigDataCorp
+  provider flow, call Pods and let Pods own provider polling and `CheckResults`
+  server-side.
 - Do not store Sumsub share tokens. Generate a fresh share token only after the
   applicant is approved and submit it to Pods immediately.
 - Use the wallet address that belongs to the approved KYC profile for onramp and

@@ -56,14 +56,14 @@ describe("buildOfframpBytecodeBody", () => {
   it("builds the Pix payout transaction body expected by Swap v2", () => {
     expect(
       buildOfframpBytecodeBody({
-        pixKey: "47567512882",
+        pixKey: "pix-key-example",
         quoteId: "quote-1",
         walletAddress,
       }),
     ).toEqual({
-      destinationAddress: "47567512882",
+      destinationAddress: "pix-key-example",
       originAddress: walletAddress,
-      pixKey: "47567512882",
+      pixKey: "pix-key-example",
       quoteId: "quote-1",
     });
   });
@@ -88,14 +88,14 @@ describe("buildTransferBytecodeBody", () => {
     expect(
       buildTransferBytecodeBody({
         kind: "offramp",
-        pixKey: "47567512882",
+        pixKey: "pix-key-example",
         quoteId: "quote-1",
         walletAddress,
       }),
     ).toEqual({
-      destinationAddress: "47567512882",
+      destinationAddress: "pix-key-example",
       originAddress: walletAddress,
-      pixKey: "47567512882",
+      pixKey: "pix-key-example",
       quoteId: "quote-1",
     });
   });

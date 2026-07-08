@@ -12,14 +12,14 @@ describe("BigDataCorp KYC helpers", () => {
   it("builds the session body with only supported fields", () => {
     expect(
       buildBigDataKycSessionBody({
-        cpf: " 47567512882 ",
-        email: " bruno@pods.finance ",
+        cpf: " CPF_FROM_USER ",
+        email: " user@example.com ",
         externalUserId: " customer-user-1 ",
         walletAddress: " 0x0000000000000000000000000000000000000001 ",
       }),
     ).toEqual({
-      cpf: "47567512882",
-      email: "bruno@pods.finance",
+      cpf: "CPF_FROM_USER",
+      email: "user@example.com",
       externalUserId: "customer-user-1",
       walletAddress: "0x0000000000000000000000000000000000000001",
     });
@@ -28,14 +28,14 @@ describe("BigDataCorp KYC helpers", () => {
   it("omits optional externalUserId when it is empty", () => {
     expect(
       buildBigDataKycSessionBody({
-        cpf: "47567512882",
-        email: "bruno@pods.finance",
+        cpf: "CPF_FROM_USER",
+        email: "user@example.com",
         externalUserId: " ",
         walletAddress: "0x0000000000000000000000000000000000000001",
       }),
     ).toEqual({
-      cpf: "47567512882",
-      email: "bruno@pods.finance",
+      cpf: "CPF_FROM_USER",
+      email: "user@example.com",
       walletAddress: "0x0000000000000000000000000000000000000001",
     });
   });
@@ -73,8 +73,8 @@ describe("BigDataCorp KYC helpers", () => {
   it("detects required session and submit fields", () => {
     expect(
       hasRequiredBigDataSessionFields({
-        cpf: "47567512882",
-        email: "bruno@pods.finance",
+        cpf: "CPF_FROM_USER",
+        email: "user@example.com",
         externalUserId: "",
         walletAddress: "0x0000000000000000000000000000000000000001",
       }),

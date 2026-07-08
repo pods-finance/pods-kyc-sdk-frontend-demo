@@ -75,7 +75,7 @@ export function BigDataKycPanel({ flow }: { flow: BigDataKycFlow }) {
             label="CPF"
             name="bigidCpf"
             onChange={flow.updateSessionField("cpf")}
-            placeholder="47567512882"
+            placeholder="CPF digits"
             required
             value={flow.sessionForm.cpf}
           />

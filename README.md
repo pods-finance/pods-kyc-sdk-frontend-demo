@@ -1,7 +1,7 @@
 # Pods KYC Demo
 
-Customer-shareable Next.js demo for the Pods KYC flow with Sumsub reusable KYC
-and Swap v2 Pix money movement.
+Customer-shareable Next.js demo for the Pods KYC flow with Sumsub reusable KYC,
+BigDataCorp iframe KYC, and Swap v2 Pix money movement.
 
 The app is intentionally small and explicit. It lets a customer see how their
 backend should:
@@ -10,6 +10,9 @@ backend should:
 - receive or poll for an approved Sumsub applicant;
 - generate a fresh Sumsub share token for Avenia;
 - submit the share token to Pods;
+- start a BigDataCorp iframe KYC session through Pods;
+- poll Pods for the canonical KYC status instead of calling BigDataCorp
+  directly;
 - call Pods Swap v2 for Pix BRL -> USDC Base onramp;
 - call Pods Swap v2 for USDC Base -> BRL Pix offramp.
 
@@ -91,7 +94,7 @@ The UI lives under `src/features/kyc-demo` and is split by responsibility:
 Use these guides when implementing the same flow inside a customer codebase:
 
 - [Temporary shared Sumsub demo](docs/customer-guides/temporary-shared-sumsub-demo.md)
-- [KYC and Sumsub share token](docs/customer-guides/kyc.md)
+- [KYC providers: Sumsub share token and BigDataCorp iframe](docs/customer-guides/kyc.md)
 - [Pix BRL to USDC Base onramp](docs/customer-guides/onramp.md)
 - [USDC Base to BRL Pix offramp](docs/customer-guides/offramp.md)
 
@@ -128,6 +131,23 @@ if the files move.
   [src/features/kyc-demo/domain/status.ts:166](src/features/kyc-demo/domain/status.ts#L166).
 - The Sumsub webhook handler generates the share token and submits it to Pods in
   [src/app/api/customer-webhooks/sumsub/route.ts:143-165](src/app/api/customer-webhooks/sumsub/route.ts#L143-L165).
+
+### BigDataCorp Iframe KYC
+
+- The BigDataCorp tab is mounted in
+  [src/features/kyc-demo/components/pods-kyc-demo-console.tsx:95](src/features/kyc-demo/components/pods-kyc-demo-console.tsx#L95).
+- BigDataCorp form parsing, request builders, and response readers live in
+  [src/features/kyc-demo/domain/bigid-kyc.ts:48](src/features/kyc-demo/domain/bigid-kyc.ts#L48).
+- BigDataCorp session creation, status polling, local restore, and Avenia submit
+  state live in
+  [src/features/kyc-demo/hooks/use-bigid-kyc-flow.ts:58](src/features/kyc-demo/hooks/use-bigid-kyc-flow.ts#L58).
+- The BigDataCorp iframe form and address submit form are rendered in
+  [src/features/kyc-demo/components/bigid-kyc-panel.tsx:47](src/features/kyc-demo/components/bigid-kyc-panel.tsx#L47).
+- Browser-side BigDataCorp requests still go through the Pods proxy in
+  [src/features/kyc-demo/lib/api.ts:8](src/features/kyc-demo/lib/api.ts#L8).
+- The demo proxy allowlists `POST /api/v1/kyc/bigdatacorp/sessions`,
+  `GET /api/v1/kyc/status`, and `POST /api/v1/kyc/bigdatacorp/submit` in
+  [src/app/api/demo/pods/route.ts:12](src/app/api/demo/pods/route.ts#L12).
 
 ### Pix BRL -> USDC Base Onramp
 
@@ -190,6 +210,9 @@ POST /api/demo/pods
 The Next.js route validates the requested path, attaches `PODS_KYC_API_KEY`
 server-side, and forwards only supported routes:
 
+- `GET /api/v1/kyc/status`
+- `POST /api/v1/kyc/bigdatacorp/sessions`
+- `POST /api/v1/kyc/bigdatacorp/submit`
 - `GET /v2/swap/quote`
 - `POST /v2/swap/bytecode`
 - `GET /v2/swap/status/{quoteId}`
@@ -197,7 +220,7 @@ server-side, and forwards only supported routes:
 This is a demo proxy. Production customers should implement the same rule in
 their backend: keep API keys server-side.
 
-## KYC Flow
+## Sumsub KYC Flow
 
 1. Fill email and wallet address.
 2. Click **Generate SDK link**.
@@ -215,6 +238,33 @@ The demo's Sumsub webhook route can automate steps 4 and 5:
 ```text
 POST /api/customer-webhooks/sumsub
 ```
+
+## BigDataCorp KYC Flow
+
+1. Fill CPF, email, and wallet address.
+2. Click **Start BigDataCorp iframe**.
+3. The demo calls Pods through the server proxy:
+
+```text
+POST /api/v1/kyc/bigdatacorp/sessions
+```
+
+4. Render the returned `iframeUrl`.
+5. Poll the canonical Pods status:
+
+```text
+GET /api/v1/kyc/status?kycUserId=<KYC_USER_ID>
+```
+
+6. When Pods reports the BigDataCorp capture is ready for Avenia, submit the
+   address fields:
+
+```text
+POST /api/v1/kyc/bigdatacorp/submit
+```
+
+The frontend never calls BigDataCorp `CheckResults` directly. Pods owns provider
+polling and updates the KYC profile behind `GET /api/v1/kyc/status`.
 
 ## Money Movement Flow
 

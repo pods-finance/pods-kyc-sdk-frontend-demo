@@ -3,7 +3,7 @@
 This document explains the demo flow for engineers who need to understand or
 extend the customer-facing Pods KYC demo.
 
-## High-Level Flow
+## High-Level Sumsub Flow
 
 ```mermaid
 sequenceDiagram
@@ -27,6 +27,36 @@ sequenceDiagram
   DemoUI->>Pods: GET /api/v1/kyc/status
   Pods-->>DemoUI: approved
   DemoUI->>Pods: Swap v2 onramp/offramp calls through proxy
+```
+
+## High-Level BigDataCorp Flow
+
+```mermaid
+sequenceDiagram
+  participant User
+  participant DemoUI as Demo UI
+  participant CustomerBackend as Demo Next.js backend
+  participant Pods
+  participant BigDataCorp
+  participant Avenia
+
+  User->>DemoUI: Enter CPF, email, and wallet
+  DemoUI->>CustomerBackend: POST /api/demo/pods
+  CustomerBackend->>Pods: POST /api/v1/kyc/bigdatacorp/sessions
+  Pods->>BigDataCorp: Create iframe session
+  BigDataCorp-->>Pods: iframeUrl and onboarding reference
+  Pods-->>CustomerBackend: kycUserId and iframeUrl
+  CustomerBackend-->>DemoUI: kycUserId and iframeUrl
+  User->>BigDataCorp: Complete document and liveness capture
+  DemoUI->>CustomerBackend: POST /api/demo/pods
+  CustomerBackend->>Pods: GET /api/v1/kyc/status
+  Pods->>BigDataCorp: Refresh provider result server-side when needed
+  Pods-->>CustomerBackend: canonical KYC status
+  DemoUI->>CustomerBackend: POST /api/demo/pods
+  CustomerBackend->>Pods: POST /api/v1/kyc/bigdatacorp/submit
+  Pods->>Avenia: Submit verified identity and address data
+  Avenia-->>Pods: KYC processing or approved state
+  DemoUI->>Pods: Swap v2 onramp/offramp calls through proxy after approval
 ```
 
 ## KYC GREEN
@@ -72,6 +102,42 @@ Relevant files:
 - `src/lib/customer-simulator/sumsub.ts`
 - `src/lib/customer-simulator/webhook.ts`
 - `src/app/api/customer-webhooks/sumsub/route.ts`
+
+## BigDataCorp Iframe KYC
+
+The BigDataCorp provider flow is also Pods-first from the frontend's
+perspective. The demo browser never calls BigDataCorp `CheckResults` directly.
+Instead, the browser asks the demo backend to call Pods, and Pods owns any
+provider polling needed to refresh the KYC profile.
+
+Session creation:
+
+```text
+POST /api/v1/kyc/bigdatacorp/sessions
+```
+
+Canonical polling:
+
+```text
+GET /api/v1/kyc/status?kycUserId=<KYC_USER_ID>
+```
+
+Final Avenia submit after capture is ready:
+
+```text
+POST /api/v1/kyc/bigdatacorp/submit
+```
+
+The final submit sends address fields to Pods so Pods can submit the verified
+BigDataCorp capture to Avenia. The demo does not store CPF, document images, raw
+provider payloads, or address data in committed artifacts.
+
+Relevant files:
+
+- `src/features/kyc-demo/domain/bigid-kyc.ts`
+- `src/features/kyc-demo/hooks/use-bigid-kyc-flow.ts`
+- `src/features/kyc-demo/components/bigid-kyc-panel.tsx`
+- `src/app/api/demo/pods/route.ts`
 
 ## Pix BRL -> USDC Base Onramp
 
@@ -177,6 +243,9 @@ The browser never receives `PODS_KYC_API_KEY`.
 
 The local proxy only forwards supported routes:
 
+- `GET /api/v1/kyc/status`
+- `POST /api/v1/kyc/bigdatacorp/sessions`
+- `POST /api/v1/kyc/bigdatacorp/submit`
 - `GET /v2/swap/quote`
 - `POST /v2/swap/bytecode`
 - `GET /v2/swap/status/{quoteId}`
