@@ -2,8 +2,10 @@
 
 import { Loader2, RefreshCw, SendHorizontal, WalletCards } from "lucide-react";
 import {
-  transferDescriptions,
-  transferLabels,
+  getTransferDescription,
+  getTransferLabel,
+  supportedTransferChains,
+  transferChains,
 } from "../constants";
 import {
   extractQuoteId,
@@ -12,6 +14,7 @@ import { getPhaseLabel } from "../lib/format";
 import type {
   RequestPhase,
   TransferAction,
+  TransferChain,
   TransferForm,
   TransferKind,
   TransferResult,
@@ -42,8 +45,8 @@ export function MoneyMovementPanel({
 }) {
   const isDisabled =
     Boolean(disabledReason) || phase === "loading" || phaseAction === "loading";
-  const title = transferLabels[kind];
-  const description = transferDescriptions[kind];
+  const title = getTransferLabel(kind, form.chain);
+  const description = getTransferDescription(kind, form.chain);
   const isOfframp = kind === "offramp";
   const amountLabel = kind === "onramp" ? "BRL amount" : "USDC amount";
   const amountHint =
@@ -55,15 +58,27 @@ export function MoneyMovementPanel({
   const quoteId = extractQuoteId(result?.payload);
   const submitLabel =
     kind === "onramp" ? "Generate Pix quote" : "Generate deposit address";
-  const formGridClass = isOfframp
-    ? "grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_260px] lg:items-end"
-    : "grid gap-3 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-end";
+  const formGridClass =
+    isOfframp
+      ? "grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_260px] xl:items-end"
+      : "grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_260px] xl:items-end";
+  const chainLabel = isOfframp ? "USDC network" : "Settlement network";
+  const chainHint = isOfframp
+    ? "Choose the network that holds the USDC you will send."
+    : "Choose the network where the acquired USDC will settle.";
 
   const handleAmountChange = (value: string) => {
     onChange({ ...form, amount: value });
   };
   const handlePixKeyChange = (value: string) => {
     onChange({ ...form, pixKey: value });
+  };
+  const handleChainChange = (value: string) => {
+    if (value !== "base" && value !== "monad") {
+      return;
+    }
+
+    onChange({ ...form, chain: value as TransferChain });
   };
 
   return (
@@ -105,6 +120,26 @@ export function MoneyMovementPanel({
             </p>
           </div>
         ) : null}
+        <label className="grid gap-1.5 text-sm">
+          <span className="font-medium text-[var(--fg-primary)]">
+            {chainLabel}
+          </span>
+          <select
+            className="text-field"
+            name={`${kind}-usdc-network`}
+            onChange={(event) => handleChainChange(event.currentTarget.value)}
+            value={form.chain}
+          >
+            {supportedTransferChains.map((chain) => (
+              <option key={chain} value={chain}>
+                {transferChains[chain].label}
+              </option>
+            ))}
+          </select>
+          <span className="text-xs leading-5 text-[var(--fg-secondary)]">
+            {chainHint}
+          </span>
+        </label>
         <button
           className="primary-button w-full"
           disabled={isDisabled}

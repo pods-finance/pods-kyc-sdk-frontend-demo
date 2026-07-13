@@ -1,5 +1,5 @@
-import { USDC_BASE_TOKEN_ADDRESS } from "../constants";
-import type { TransferKind } from "../types";
+import { demoSwapWebhookUrl, transferChains } from "../constants";
+import type { TransferChain, TransferKind } from "../types";
 import {
   firstJsonStringAtPath,
   firstNumberAtPath,
@@ -28,25 +28,47 @@ export function buildTransferQuoteParams(
   kind: TransferKind,
   amountIn: string,
   walletAddress: string,
+  chain: TransferChain,
 ): Record<string, string> {
   if (kind === "onramp") {
-    return {
+    const destination = transferChains[chain];
+
+    const params = {
       amountIn,
       destinationAddress: walletAddress,
-      destinationChain: "base",
+      destinationChain: chain,
       originChain: "fiat",
       tokenIn: "BRL",
-      tokenOut: USDC_BASE_TOKEN_ADDRESS,
+      tokenOut: destination.usdcTokenAddress,
     };
+
+    return addWebhookUrl(params);
   }
 
-  return {
+  const source = transferChains[chain];
+
+  const params = {
     amountIn,
     destinationChain: "fiat",
     originAddress: walletAddress,
-    originChain: "base",
-    tokenIn: USDC_BASE_TOKEN_ADDRESS,
+    originChain: chain,
+    tokenIn: source.usdcTokenAddress,
     tokenOut: "BRL",
+  };
+
+  return addWebhookUrl(params);
+}
+
+function addWebhookUrl(
+  params: Record<string, string>,
+): Record<string, string> {
+  if (!demoSwapWebhookUrl) {
+    return params;
+  }
+
+  return {
+    ...params,
+    webhookURL: demoSwapWebhookUrl,
   };
 }
 

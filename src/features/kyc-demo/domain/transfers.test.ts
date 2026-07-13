@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { USDC_BASE_TOKEN_ADDRESS } from "../constants";
+import {
+  USDC_BASE_TOKEN_ADDRESS,
+  USDC_MONAD_TOKEN_ADDRESS,
+} from "../constants";
 import {
   buildOfframpBytecodeBody,
   buildQuery,
@@ -18,7 +21,9 @@ const walletAddress = "0x0000000000000000000000000000000000000001";
 
 describe("buildTransferQuoteParams", () => {
   it("builds fixed Pix BRL to USDC Base onramp quote params", () => {
-    expect(buildTransferQuoteParams("onramp", "1000", walletAddress)).toEqual({
+    expect(
+      buildTransferQuoteParams("onramp", "1000", walletAddress, "base"),
+    ).toEqual({
       amountIn: "1000",
       destinationAddress: walletAddress,
       destinationChain: "base",
@@ -28,13 +33,41 @@ describe("buildTransferQuoteParams", () => {
     });
   });
 
-  it("builds fixed USDC Base to BRL Pix offramp quote params", () => {
-    expect(buildTransferQuoteParams("offramp", "1000000", walletAddress)).toEqual({
+  it("builds Pix BRL to USDC Monad onramp quote params", () => {
+    expect(
+      buildTransferQuoteParams("onramp", "1000", walletAddress, "monad"),
+    ).toEqual({
+      amountIn: "1000",
+      destinationAddress: walletAddress,
+      destinationChain: "monad",
+      originChain: "fiat",
+      tokenIn: "BRL",
+      tokenOut: USDC_MONAD_TOKEN_ADDRESS,
+    });
+  });
+
+  it("builds USDC Base to BRL Pix offramp quote params", () => {
+    expect(
+      buildTransferQuoteParams("offramp", "1000000", walletAddress, "base"),
+    ).toEqual({
       amountIn: "1000000",
       destinationChain: "fiat",
       originAddress: walletAddress,
       originChain: "base",
       tokenIn: USDC_BASE_TOKEN_ADDRESS,
+      tokenOut: "BRL",
+    });
+  });
+
+  it("builds USDC Monad to BRL Pix offramp quote params", () => {
+    expect(
+      buildTransferQuoteParams("offramp", "1000000", walletAddress, "monad"),
+    ).toEqual({
+      amountIn: "1000000",
+      destinationChain: "fiat",
+      originAddress: walletAddress,
+      originChain: "monad",
+      tokenIn: USDC_MONAD_TOKEN_ADDRESS,
       tokenOut: "BRL",
     });
   });
@@ -48,6 +81,16 @@ describe("buildTransferQuoteParams", () => {
       }),
     ).toBe(
       "/v2/swap/quote?amountIn=1000&destinationAddress=0x0000000000000000000000000000000000000001&originChain=fiat",
+    );
+  });
+
+  it("encodes webhookURL with the provider's exact parameter name", () => {
+    expect(
+      buildQuery("/v2/swap/quote", {
+        webhookURL: "https://example.com/webhooks/swap",
+      }),
+    ).toBe(
+      "/v2/swap/quote?webhookURL=https%3A%2F%2Fexample.com%2Fwebhooks%2Fswap",
     );
   });
 });

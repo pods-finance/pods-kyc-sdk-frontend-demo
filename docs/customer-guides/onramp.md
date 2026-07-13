@@ -1,12 +1,13 @@
-# Pix BRL to USDC Base Onramp Guide
+# Pix BRL to USDC Onramp Guide
 
 This guide shows how to generate a Pix payment quote that settles USDC on Base
-into an approved user wallet.
+or Monad into an approved user wallet.
 
-The current route is fixed to:
+The supported routes are:
 
 ```text
 Pix BRL -> USDC Base
+Pix BRL -> USDC Monad
 ```
 
 Do not expose the Pods API key in the browser. Your backend should call Pods and
@@ -33,9 +34,9 @@ Required query parameters:
 
 ```text
 originChain=fiat
-destinationChain=base
+destinationChain=<base|monad>
 tokenIn=BRL
-tokenOut=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
+tokenOut=<USDC contract for the selected chain>
 amountIn=1000
 destinationAddress=0x0000000000000000000000000000000000000001
 ```
@@ -43,13 +44,17 @@ destinationAddress=0x0000000000000000000000000000000000000001
 Parameter notes:
 
 - `amountIn` is BRL minor units. For example, `1000` means BRL `10.00`.
-- `destinationAddress` is the approved EVM wallet that receives USDC on Base.
-- `tokenOut` is fixed to USDC on Base for this demo.
+- `destinationAddress` is the approved EVM wallet that receives USDC on the
+  selected chain.
+- Use `destinationChain=base` with
+  `tokenOut=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` for Base.
+- Use `destinationChain=monad` with
+  `tokenOut=0x754704Bc059F8C67012fEd69BC8A327a5aafb603` for Monad.
 
 Example URL:
 
 ```text
-GET /v2/swap/quote?originChain=fiat&destinationChain=base&tokenIn=BRL&tokenOut=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913&amountIn=1000&destinationAddress=0x0000000000000000000000000000000000000001
+GET /v2/swap/quote?originChain=fiat&destinationChain=monad&tokenIn=BRL&tokenOut=0x754704Bc059F8C67012fEd69BC8A327a5aafb603&amountIn=1000&destinationAddress=0x0000000000000000000000000000000000000001
 ```
 
 ## Response Fields to Use
@@ -61,7 +66,7 @@ The quote response can include:
   "quote": {
     "quoteId": "QUOTE_ID",
     "originChain": "fiat",
-    "destinationChain": "base",
+    "destinationChain": "monad",
     "tokenIn": {
       "symbol": "BRL",
       "decimals": 2,
@@ -72,7 +77,7 @@ The quote response can include:
       "decimals": 6,
       "amount": "1768913",
       "expectedAmountOut": "1768913",
-      "chainId": 8453
+      "chainId": 143
     },
     "status": "pending",
     "feeBreakdown": {
@@ -117,7 +122,6 @@ pending, paid, failed, or expired.
 ## Implementation Notes
 
 - Convert user-entered BRL display amounts to minor units before calling Pods.
-- Keep `originChain`, `destinationChain`, `tokenIn`, and `tokenOut` fixed unless
-  Pods explicitly enables more routes for your integration.
-- Do not ask users to choose the output payment method; this route is fixed to
-  USDC on Base.
+- Keep `originChain=fiat` and `tokenIn=BRL` fixed. Select the matching
+  `destinationChain` and USDC `tokenOut` pair documented above.
+- The current demo supports USDC on Base and Monad for onramp and offramp.

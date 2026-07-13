@@ -13,8 +13,8 @@ backend should:
 - start a BigDataCorp iframe KYC session through Pods;
 - poll Pods for the canonical KYC status instead of calling BigDataCorp
   directly;
-- call Pods Swap v2 for Pix BRL -> USDC Base onramp;
-- call Pods Swap v2 for USDC Base -> BRL Pix offramp.
+- call Pods Swap v2 for Pix BRL -> USDC on Base or Monad onramp;
+- call Pods Swap v2 for USDC on Base or Monad -> BRL Pix offramp.
 
 The current demo backend is:
 
@@ -84,7 +84,7 @@ The UI lives under `src/features/kyc-demo` and is split by responsibility:
 - `hooks/`: KYC/session/status state and money movement state.
 - `lib/`: API, local persistence, formatting, and record readers.
 - `types.ts`: shared feature types.
-- `constants.ts`: fixed demo constants such as USDC on Base and endpoint names.
+- `constants.ts`: supported settlement chains, USDC addresses, and endpoint names.
 
 `src/app/page.tsx` only renders the demo console. The API routes under
 `src/app/api/demo` simulate the customer backend during local demos.
@@ -149,7 +149,7 @@ if the files move.
   `GET /api/v1/kyc/status`, and `POST /api/v1/kyc/bigdatacorp/submit` in
   [src/app/api/demo/pods/route.ts:12](src/app/api/demo/pods/route.ts#L12).
 
-### Pix BRL -> USDC Base Onramp
+### Pix BRL -> USDC Onramp
 
 - The onramp card is mounted in
   [src/features/kyc-demo/components/pods-kyc-demo-console.tsx:113](src/features/kyc-demo/components/pods-kyc-demo-console.tsx#L113).
@@ -268,7 +268,7 @@ polling and updates the KYC profile behind `GET /api/v1/kyc/status`.
 
 ## Money Movement Flow
 
-### Pix BRL -> USDC Base
+### Pix BRL -> USDC on Base or Monad
 
 The onramp card calls:
 
@@ -280,17 +280,18 @@ with:
 
 ```text
 originChain=fiat
-destinationChain=base
+destinationChain=<base|monad>
 tokenIn=BRL
-tokenOut=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
+tokenOut=<USDC contract for the selected chain>
 amountIn=<BRL minor units>
 destinationAddress=<approved wallet>
 ```
 
-The response displays the Pix copy-paste code, quote ID, expiration, USDC output,
-and fee breakdown.
+Use USDC `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` for Base or
+`0x754704Bc059F8C67012fEd69BC8A327a5aafb603` for Monad. The response displays
+the Pix copy-paste code, quote ID, expiration, USDC output, and fee breakdown.
 
-### USDC Base -> BRL Pix
+### USDC on Base or Monad -> BRL Pix
 
 The UI asks for a human USDC amount, such as `1` or `1.5`, then converts it to
 USDC raw units before calling the API.

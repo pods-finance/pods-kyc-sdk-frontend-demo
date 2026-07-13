@@ -2,10 +2,10 @@
 
 import { useCallback, useState } from "react";
 import {
+  getTransferLabel,
   initialOfframpTransferForm,
   initialOnrampTransferForm,
   transferEndpoints,
-  transferLabels,
 } from "../constants";
 import {
   DEMO_ENDPOINTS,
@@ -154,6 +154,7 @@ export function useMoneyMovement({
           kind,
           amountIn,
           walletAddress,
+          form.chain,
         );
 
         const payload = await apiRequest(
@@ -271,7 +272,7 @@ export function useMoneyMovement({
 
         const message = getResponseMessage(
           payload,
-          `${transferLabels[kind]} ${action} completed.`,
+          `${getTransferLabel(kind, kind === "onramp" ? onrampForm.chain : offrampForm.chain)} ${action} completed.`,
         );
 
         setTransferActionPhases((current) => ({
@@ -294,7 +295,13 @@ export function useMoneyMovement({
         }));
       }
     },
-    [offrampForm.pixKey, transferResults, walletAddress],
+    [
+      offrampForm.chain,
+      offrampForm.pixKey,
+      onrampForm.chain,
+      transferResults,
+      walletAddress,
+    ],
   );
 
   return {

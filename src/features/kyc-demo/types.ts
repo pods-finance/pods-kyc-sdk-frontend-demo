@@ -2,6 +2,7 @@ import type { VerificationStatus } from "./domain/status";
 
 export type RequestPhase = "idle" | "loading" | "success" | "error";
 export type TransferKind = "onramp" | "offramp";
+export type TransferChain = "base" | "monad";
 export type TransferAction = "execute" | "refresh";
 export type SumsubEnvironment = "production" | "sandbox";
 
@@ -29,6 +30,7 @@ export type SdkEvent = {
 
 export type TransferForm = {
   amount: string;
+  chain: TransferChain;
   pixKey: string;
 };
 
